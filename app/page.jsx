@@ -1,27 +1,12 @@
-'use client'
-import React from "react";
-import HeaderSlider from "@/components/HeaderSlider";
-import HomeProducts from "@/components/HomeProducts";
-import Banner from "@/components/Banner";
-import NewsLetter from "@/components/NewsLetter";
-import FeaturedProduct from "@/components/FeaturedProduct";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import React, { Suspense } from "react";
+import HomeClient from "@/components/HomeClient";
 
-const Home = () => {
+const Page = () => {
   return (
-    <>
-      <Navbar/>
-      <div className="px-6 md:px-16 lg:px-32">
-        <HeaderSlider />
-        <HomeProducts />
-        <FeaturedProduct />
-        <Banner />
-        <NewsLetter />
-      </div>
-      <Footer />
-    </>
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeClient />
+    </Suspense>
   );
 };
 
-export default Home;
+export default Page;
