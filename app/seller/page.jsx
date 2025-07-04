@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
@@ -10,7 +10,7 @@ import axios from "axios";
 const AddProduct = () => {
   const { getToken } = useAppContext();
 
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState([null, null, null, null]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Earphone");
@@ -25,8 +25,13 @@ const AddProduct = () => {
     },
   ]);
 
+  const fileInputRefs = useRef([]);
+
   const resetForm = () => {
-    setFiles([]);
+    setFiles([null, null, null, null]);
+    fileInputRefs.current.forEach((input) => {
+      if (input) input.value = "";
+    });
     setName("");
     setDescription("");
     setCategory("Earphone");
@@ -56,8 +61,10 @@ const AddProduct = () => {
 
   const removeSpecField = (groupIndex, specIndex) => {
     const updated = [...specGroups];
-    updated[groupIndex].specs.splice(specIndex, 1);
-    setSpecGroups(updated);
+    if (updated[groupIndex].specs.length > 1) {
+      updated[groupIndex].specs.splice(specIndex, 1);
+      setSpecGroups(updated);
+    }
   };
 
   const addSpecGroup = () => {
@@ -67,20 +74,44 @@ const AddProduct = () => {
     ]);
   };
 
+  useEffect(() => {
+    return () => {
+      files.forEach((file) => {
+        if (file) URL.revokeObjectURL(file.preview);
+      });
+    };
+  }, [files]);
+
+  const handleFileChange = (index, file) => {
+    const updatedFiles = [...files];
+    if (file) {
+      file.preview = URL.createObjectURL(file);
+      updatedFiles[index] = file;
+    } else {
+      updatedFiles[index] = null;
+    }
+    setFiles(updatedFiles);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (files.length === 0) {
+    if (!files.some((f) => f !== null)) {
       toast.error("Please upload at least one image.");
       return;
     }
 
-    if (Number(offerPrice) >= Number(price)) {
+    if (!price || Number(price) <= 0) {
+      toast.error("Please enter a valid product price.");
+      return;
+    }
+
+    if (offerPrice && Number(offerPrice) >= Number(price)) {
       toast.error("Offer price must be less than original price.");
       return;
     }
 
-    if (Number(stock) < 0 || stock === "") {
+    if (stock === "" || Number(stock) < 0) {
       toast.error("Stock must be a non-negative number.");
       return;
     }
@@ -88,32 +119,39 @@ const AddProduct = () => {
     const formattedSpecs = {};
     specGroups.forEach((group) => {
       if (!group.title.trim()) return;
-      formattedSpecs[group.title] = {};
+      formattedSpecs[group.title.trim()] = {};
       group.specs.forEach((s) => {
-        if (s.key && s.value) {
-          formattedSpecs[group.title][s.key] = s.value;
+        const key = s.key.trim();
+        const value = s.value.trim();
+        if (key && value) {
+          formattedSpecs[group.title.trim()][key] = value;
         }
       });
     });
 
     const formData = new FormData();
-    formData.append("name", name);
-    formData.append("description", description);
+    formData.append("name", name.trim());
+    formData.append("description", description.trim());
     formData.append("category", category);
     formData.append("price", price);
-    formData.append("offerPrice", offerPrice);
+    formData.append("offerPrice", offerPrice || "");
     formData.append("stock", stock);
     formData.append("specs", JSON.stringify(formattedSpecs));
 
-    for (let i = 0; i < files.length; i++) {
-      formData.append("images", files[i]);
-    }
+    files.forEach((file) => {
+      if (file) formData.append("images", file);
+    });
 
     try {
       setLoading(true);
       const token = getToken();
 
-      const { data } = await axios.post("/api/product/add", formData);
+      const { data } = await axios.post("/api/product/add", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (data.success) {
         toast.success(data.message || "Product added successfully!");
@@ -122,7 +160,9 @@ const AddProduct = () => {
         toast.error(data.message || "Something went wrong!");
       }
     } catch (err) {
-      toast.error(err.message || "Submission failed.");
+      toast.error(
+        err.response?.data?.message || err.message || "Submission failed."
+      );
     } finally {
       setLoading(false);
     }
@@ -134,28 +174,23 @@ const AddProduct = () => {
         <div>
           <p className="text-base font-medium">Product Image</p>
           <div className="flex flex-wrap items-center gap-3 mt-2">
-            {[...Array(4)].map((_, index) => (
+            {[0, 1, 2, 3].map((index) => (
               <label key={index} htmlFor={`image${index}`}>
                 <input
                   type="file"
                   id={`image${index}`}
                   hidden
-                  onChange={(e) => {
-                    const updatedFiles = [...files];
-                    updatedFiles[index] = e.target.files[0];
-                    setFiles(updatedFiles);
-                  }}
+                  accept="image/*"
+                  ref={(el) => (fileInputRefs.current[index] = el)}
+                  onChange={(e) => handleFileChange(index, e.target.files[0])}
                 />
                 <Image
                   className="max-w-24 cursor-pointer"
-                  src={
-                    files[index]
-                      ? URL.createObjectURL(files[index])
-                      : assets.upload_area
-                  }
+                  src={files[index] ? files[index].preview : assets.upload_area}
                   alt="Upload Preview"
                   width={100}
                   height={100}
+                  unoptimized
                 />
               </label>
             ))}
@@ -233,6 +268,8 @@ const AddProduct = () => {
               onChange={(e) => setPrice(e.target.value)}
               value={price}
               required
+              min="0"
+              step="0.01"
             />
           </div>
 
@@ -247,7 +284,8 @@ const AddProduct = () => {
               className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
               onChange={(e) => setOfferPrice(e.target.value)}
               value={offerPrice}
-              required
+              min="0"
+              step="0.01"
             />
           </div>
 
@@ -280,6 +318,7 @@ const AddProduct = () => {
                   handleGroupTitleChange(groupIndex, e.target.value)
                 }
                 className="w-full px-3 py-2 border border-gray-500/40 rounded"
+                required
               />
               {group.specs.map((spec, specIndex) => (
                 <div key={specIndex} className="flex items-center gap-2">
@@ -296,6 +335,7 @@ const AddProduct = () => {
                       )
                     }
                     className="w-32 px-3 py-2 border border-gray-500/40 rounded"
+                    required
                   />
                   <input
                     type="text"
@@ -310,6 +350,7 @@ const AddProduct = () => {
                       )
                     }
                     className="w-40 px-3 py-2 border border-gray-500/40 rounded"
+                    required
                   />
                   {specIndex > 0 && (
                     <button
@@ -338,6 +379,37 @@ const AddProduct = () => {
           >
             + Add Spec Group
           </button>
+          <div className="mt-10 border-t pt-6 space-y-2">
+            <p className="text-lg font-semibold">Bulk Upload via JSON File</p>
+            <input
+              type="file"
+              accept=".json"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.type !== "application/json") {
+                  toast.error("Please upload a valid .json file.");
+                  return;
+                }
+                const formData = new FormData();
+                formData.append("file", file);
+                try {
+                  setLoading(true);
+                  const { data } = await axios.post("/api/upload", formData);
+                  if (data.success) {
+                    toast.success(data.message || "Bulk upload successful!");
+                  } else {
+                    toast.error(data.message || "Bulk upload failed!");
+                  }
+                } catch (err) {
+                  toast.error(err.response?.data?.message || "Upload error.");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+            />
+          </div>
         </div>
 
         <button
