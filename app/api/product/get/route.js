@@ -9,14 +9,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
 
-    // If no search term, return all products (or you can limit here)
     const query = search
-      ? { name: { $regex: search, $options: "i" } } // case-insensitive substring search
+      ? { name: { $regex: search, $options: "i" } }
       : {};
 
-    const products = await Product.find(query);
+    const products = await Product.find(query).lean(); // lean returns plain JS objects
 
-    return NextResponse.json({ success: true, products });
+    // Convert _id from ObjectId to string for frontend ease
+    const productsWithStringId = products.map(product => ({
+      ...product,
+      _id: product._id.toString(),
+    }));
+
+    return NextResponse.json({ success: true, products: productsWithStringId });
   } catch (err) {
     console.error("Product GET error:", err);
     return NextResponse.json(

@@ -1,36 +1,26 @@
-import connectdb from "@/config/db";
-import authSeller from "@/lib/authSeller";
-import Product from "@/models/Product";
-import { getAuth } from "@clerk/nextjs/server";
+// app/api/product/seller-list/route.js
 import { NextResponse } from "next/server";
+import connectdb from "@/config/db";
+import Product from "@/models/Product";
+import authSeller from "@/lib/authSeller";
 
-export async function GET(request) {
-  try {
-    // 1. Authenticate user
-    const { userId } = await getAuth(request);
+// Wrap your handler with authSeller so only sellers can fetch
+export const GET = authSeller(async (req) => {
+  // 1) Connect to the database
+  await connectdb();
 
-    // 2. Authorize user as seller
-    const isSeller = authSeller(userId);
-    if (!isSeller) {
-      return NextResponse.json(
-        { success: false, message: "Not Authorized" },
-        { status: 403 }
-      );
-    }
+  // 2) Fetch all products as plain objects, selecting only needed fields
+  const products = await Product.find({}).lean().select({
+    name: 1,
+    category: 1,
+    offerPrice: 1,
+    image: 1,
+    stock: 1,
+    reservedStock: 1,
+    forceOutOfStock: 1,
+    // add any other fields your UI needs…
+  });
 
-    // 3. Connect to DB
-    await connectdb();
-
-    // 4. Fetch all products
-    const products = await Product.find({});
-
-    // 5. Return success
-    return NextResponse.json({ success: true, products }, { status: 200 });
-  } catch (err) {
-    // 6. Error handling
-    return NextResponse.json(
-      { success: false, message: err.message },
-      { status: 500 }
-    );
-  }
-}
+  // 3) Return them
+  return NextResponse.json({ success: true, products }, { status: 200 });
+});

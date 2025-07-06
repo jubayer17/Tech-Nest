@@ -65,8 +65,14 @@ const productSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
-
-    // 🔽 ADD THIS PART
+    forceOutOfStock: {
+      type: Boolean,
+      default: false,
+    },
+    reservedStock: {
+      type: Number,
+      default: null, // null means no stock is reserved (visible stock)
+    },
     specs: {
       type: Map,
       of: {
