@@ -21,6 +21,7 @@
     "inngest": "^3.36.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
+    "micro": "^10.0.1",
     "mongoose": "^8.14.3",
     "next": "^15.2.4",
     "next-cloudinary": "^6.16.0",
