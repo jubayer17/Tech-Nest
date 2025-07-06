@@ -7,18 +7,17 @@ import Stripe from "stripe";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// ✅ Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is not defined in environment variables.");
 }
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ Route handler
 export async function POST(request) {
   try {
     await connectdb();
 
-    const { userId } = await getAuth(request); // ✅ Corrected: use request instead of req
+    const { userId } = await getAuth(request);
     const { address, items } = await request.json();
     const origin = request.headers.get("origin");
 
@@ -26,15 +25,17 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "Invalid data" });
     }
 
-    let productData = [];
-    let amount = 0;
-
     const products = await Promise.all(
       items.map((item) => Product.findById(item.product))
     );
 
+    let productData = [];
+    let amount = 0;
+
     for (let i = 0; i < items.length; i++) {
       const product = products[i];
+      const quantity = items[i].quantity;
+
       if (!product) {
         return NextResponse.json({
           success: false,
@@ -42,29 +43,43 @@ export async function POST(request) {
         });
       }
 
+      if (quantity > product.stock - product.reservedStock) {
+        return NextResponse.json({
+          success: false,
+          message: `Not enough stock for ${product.name}`,
+        });
+      }
+
       productData.push({
         name: product.name,
         price: product.offerPrice,
-        quantity: items[i].quantity,
+        quantity,
       });
 
-      amount += product.offerPrice * items[i].quantity;
+      amount += product.offerPrice * quantity;
     }
 
     const orderAmount = amount + Math.floor(amount * 0.02);
 
-    // ✅ Create order in database
     const order = await Order.create({
       userId,
       address,
       items,
       amount: orderAmount,
       date: Date.now(),
-      paymentType: "Stripe", // ✅ hardcoded
+      paymentType: "Stripe",
       isPaid: false,
     });
 
-    // ✅ Prepare Stripe line items
+    // Reserve stock
+    await Promise.all(
+      items.map((item) =>
+        Product.findByIdAndUpdate(item.product, {
+          $inc: { reservedStock: item.quantity },
+        })
+      )
+    );
+
     const line_items = productData.map((item) => ({
       price_data: {
         currency: "usd",
@@ -76,12 +91,14 @@ export async function POST(request) {
       quantity: item.quantity,
     }));
 
-    // ✅ Create Stripe Checkout session
+    const user = await User.findById(userId);
+
     const session = await stripe.checkout.sessions.create({
       line_items,
       mode: "payment",
       success_url: `${origin}/order-placed`,
       cancel_url: `${origin}/cart`,
+      customer_email: user?.email || undefined,
       metadata: {
         orderId: order._id.toString(),
         userId,
@@ -90,7 +107,7 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, url: session.url });
   } catch (err) {
-    console.error("Stripe Order Error:", err);
+    console.error("Stripe Order Error:", err.stack || err);
     return NextResponse.json({
       success: false,
       message: err.message || "Something went wrong",

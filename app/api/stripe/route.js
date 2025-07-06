@@ -1,17 +1,24 @@
+import { buffer } from "micro";
 import connectdb from "@/config/db";
 import Order from "@/models/Order";
 import User from "@/models/User";
 import Stripe from "stripe";
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
   try {
-    const body = await request.text();
+    const rawBody = await buffer(request);
     const sig = request.headers.get("stripe-signature");
 
     const event = stripe.webhooks.constructEvent(
-      body,
+      rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -35,30 +42,19 @@ export async function POST(request) {
     };
 
     switch (event.type) {
-      case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object;
-        await handlePaymentIntent(paymentIntent.id, true);
+      case "payment_intent.succeeded":
+        await handlePaymentIntent(event.data.object.id, true);
         break;
-      }
-      case "payment_intent.canceled": {
-        const paymentIntent = event.data.object;
-        await handlePaymentIntent(paymentIntent.id, false);
+      case "payment_intent.canceled":
+        await handlePaymentIntent(event.data.object.id, false);
         break;
-      }
       default:
         console.log(`Unhandled event type ${event.type}`);
-        break;
     }
 
     return new Response("Webhook received", { status: 200 });
   } catch (err) {
     console.error("Stripe webhook error:", err.message);
-    return new Response("Webhook error", { status: 400 });
+    return new Response(`Webhook error: ${err.message}`, { status: 400 });
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
