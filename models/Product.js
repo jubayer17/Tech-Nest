@@ -39,20 +39,11 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: [
-        "Earphone",
-        "Headphone",
-        "Watch",
-        "Smartphone",
-        "Laptop",
-        "Camera",
-        "Mouse",
-        "Tablet",
-        "Keyboard",
-        "Monitor",
-        "Processor",
-        "Accessories",
-      ],
+      trim: true,
+    },
+    subcategory: {
+      type: String,
+      default: "", // Optional field
     },
     date: {
       type: Date,
@@ -71,7 +62,7 @@ const productSchema = new mongoose.Schema(
     },
     reservedStock: {
       type: Number,
-      default: null, // null means no stock is reserved (visible stock)
+      default: null,
     },
     specs: {
       type: Map,

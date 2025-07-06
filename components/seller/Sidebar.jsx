@@ -17,8 +17,15 @@ const SideBar = () => {
       name: "Stock Manager",
       path: "/seller/manage-stock",
       icon: assets.order_icon,
-    }, // updated path
+    },
     { name: "Orders", path: "/seller/orders", icon: assets.order_icon },
+
+    // New section for Add Category
+    {
+      name: "Add Category",
+      path: "/seller/add-category",
+      icon: assets.category_icon || assets.add_icon, // replace with your category icon if you have one
+    },
   ];
 
   return (

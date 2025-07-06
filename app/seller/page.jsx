@@ -13,7 +13,8 @@ const AddProduct = () => {
   const [files, setFiles] = useState([null, null, null, null]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Earphone");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
   const [price, setPrice] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
   const [stock, setStock] = useState("");
@@ -34,11 +35,47 @@ const AddProduct = () => {
     });
     setName("");
     setDescription("");
-    setCategory("Earphone");
+    setCategory("");
     setPrice("");
     setOfferPrice("");
     setStock("");
     setSpecGroups([{ title: "Main Feature", specs: [{ key: "", value: "" }] }]);
+  };
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const { data } = await axios.get("/api/category/list");
+        if (data.success) {
+          setCategories(data.categories);
+          if (data.categories.length > 0) {
+            setCategory(data.categories[0].name);
+          }
+        } else toast.error("Failed to load categories");
+      } catch (err) {
+        toast.error("Error fetching categories");
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      files.forEach((file) => {
+        if (file) URL.revokeObjectURL(file.preview);
+      });
+    };
+  }, [files]);
+
+  const handleFileChange = (index, file) => {
+    const updatedFiles = [...files];
+    if (file) {
+      file.preview = URL.createObjectURL(file);
+      updatedFiles[index] = file;
+    } else {
+      updatedFiles[index] = null;
+    }
+    setFiles(updatedFiles);
   };
 
   const handleGroupTitleChange = (index, value) => {
@@ -72,25 +109,6 @@ const AddProduct = () => {
       ...specGroups,
       { title: "", specs: [{ key: "", value: "" }] },
     ]);
-  };
-
-  useEffect(() => {
-    return () => {
-      files.forEach((file) => {
-        if (file) URL.revokeObjectURL(file.preview);
-      });
-    };
-  }, [files]);
-
-  const handleFileChange = (index, file) => {
-    const updatedFiles = [...files];
-    if (file) {
-      file.preview = URL.createObjectURL(file);
-      updatedFiles[index] = file;
-    } else {
-      updatedFiles[index] = null;
-    }
-    setFiles(updatedFiles);
   };
 
   const handleSubmit = async (e) => {
@@ -171,6 +189,7 @@ const AddProduct = () => {
   return (
     <div className="flex-1 min-h-screen flex flex-col justify-between">
       <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-5 max-w-lg">
+        {/* Image Upload */}
         <div>
           <p className="text-base font-medium">Product Image</p>
           <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -197,15 +216,13 @@ const AddProduct = () => {
           </div>
         </div>
 
+        {/* Product Info */}
         <div className="flex flex-col gap-1 max-w-md">
-          <label htmlFor="product-name" className="text-base font-medium">
-            Product Name
-          </label>
+          <label className="text-base font-medium">Product Name</label>
           <input
-            id="product-name"
             type="text"
             placeholder="Type here"
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+            className="outline-none py-2 px-3 rounded border border-gray-500/40"
             onChange={(e) => setName(e.target.value)}
             value={name}
             required
@@ -213,58 +230,42 @@ const AddProduct = () => {
         </div>
 
         <div className="flex flex-col gap-1 max-w-md">
-          <label
-            htmlFor="product-description"
-            className="text-base font-medium"
-          >
-            Product Description
-          </label>
+          <label className="text-base font-medium">Product Description</label>
           <textarea
-            id="product-description"
             rows={4}
             placeholder="Type here"
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40 resize-none"
+            className="outline-none py-2 px-3 rounded border border-gray-500/40 resize-none"
             onChange={(e) => setDescription(e.target.value)}
             value={description}
             required
           ></textarea>
         </div>
 
+        {/* Category Dropdown - Dynamic */}
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex flex-col gap-1 w-32">
-            <label htmlFor="category" className="text-base font-medium">
-              Category
-            </label>
+            <label className="text-base font-medium">Category</label>
             <select
-              id="category"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              className="outline-none py-2 px-3 rounded border border-gray-500/40"
               onChange={(e) => setCategory(e.target.value)}
               value={category}
+              required
             >
-              <option value="Earphone">Earphone</option>
-              <option value="Headphone">Headphone</option>
-              <option value="Watch">Watch</option>
-              <option value="Smartphone">Smartphone</option>
-              <option value="Laptop">Laptop</option>
-              <option value="Camera">Camera</option>
-              <option value="Mouse">Mouse</option>
-              <option value="Tablet">Tablet</option>
-              <option value="Keyboard">Keyboard</option>
-              <option value="Monitor">Monitor</option>
-              <option value="Processor">Processor</option>
-              <option value="Accessories">Accessories</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Other Inputs */}
           <div className="flex flex-col gap-1 w-32">
-            <label htmlFor="product-price" className="text-base font-medium">
-              Product Price
-            </label>
+            <label className="text-base font-medium">Price</label>
             <input
-              id="product-price"
               type="number"
               placeholder="0"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              className="outline-none py-2 px-3 rounded border border-gray-500/40"
               onChange={(e) => setPrice(e.target.value)}
               value={price}
               required
@@ -274,14 +275,11 @@ const AddProduct = () => {
           </div>
 
           <div className="flex flex-col gap-1 w-32">
-            <label htmlFor="offer-price" className="text-base font-medium">
-              Offer Price
-            </label>
+            <label className="text-base font-medium">Offer Price</label>
             <input
-              id="offer-price"
               type="number"
               placeholder="0"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              className="outline-none py-2 px-3 rounded border border-gray-500/40"
               onChange={(e) => setOfferPrice(e.target.value)}
               value={offerPrice}
               min="0"
@@ -290,15 +288,12 @@ const AddProduct = () => {
           </div>
 
           <div className="flex flex-col gap-1 w-32">
-            <label htmlFor="stock" className="text-base font-medium">
-              Stock
-            </label>
+            <label className="text-base font-medium">Stock</label>
             <input
-              id="stock"
               type="number"
               min="0"
               placeholder="0"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              className="outline-none py-2 px-3 rounded border border-gray-500/40"
               onChange={(e) => setStock(e.target.value)}
               value={stock}
               required
@@ -306,6 +301,7 @@ const AddProduct = () => {
           </div>
         </div>
 
+        {/* Specifications */}
         <div className="space-y-6">
           <p className="text-lg font-semibold">Specifications</p>
           {specGroups.map((group, groupIndex) => (
@@ -379,39 +375,9 @@ const AddProduct = () => {
           >
             + Add Spec Group
           </button>
-          <div className="mt-10 border-t pt-6 space-y-2">
-            <p className="text-lg font-semibold">Bulk Upload via JSON File</p>
-            <input
-              type="file"
-              accept=".json"
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (file.type !== "application/json") {
-                  toast.error("Please upload a valid .json file.");
-                  return;
-                }
-                const formData = new FormData();
-                formData.append("file", file);
-                try {
-                  setLoading(true);
-                  const { data } = await axios.post("/api/upload", formData);
-                  if (data.success) {
-                    toast.success(data.message || "Bulk upload successful!");
-                  } else {
-                    toast.error(data.message || "Bulk upload failed!");
-                  }
-                } catch (err) {
-                  toast.error(err.response?.data?.message || "Upload error.");
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-            />
-          </div>
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
