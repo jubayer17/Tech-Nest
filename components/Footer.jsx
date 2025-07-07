@@ -48,14 +48,14 @@ const Footer = () => {
           <div>
             <h2 className="font-medium text-gray-900 mb-5">Get in touch</h2>
             <div className="text-sm space-y-2">
-              <p>+880-1785-720-927</p>
-              <p>contact@jubayer@cse.pstu.ac.bd</p>
+              <p>+880-1785-720-927 & 01312812031</p>
+              <p>contact@jubayer@cse.pstu.ac.bd & zahid218120@gmail.com</p>
             </div>
           </div>
         </div>
       </div>
       <p className="py-4 text-center text-xs md:text-sm">
-        Copyright 2025 © Jubayer | All Right Reserved.
+        Copyright 2025 © Jubayer and Zahid | All Right Reserved.
       </p>
     </footer>
   );

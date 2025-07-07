@@ -149,15 +149,21 @@ const Navbar = ({
 
         {/* Desktop navigation */}
         <div className="hidden md:flex items-center gap-4 lg:gap-8">
-          {["Home", "Shop", "About Us", "Contact"].map((label, idx) => (
+          {[
+            { label: "Home", href: "/" },
+            { label: "Shop", href: "/all-products" },
+            { label: "About Us", href: "/about" },
+            { label: "Contact", href: "/contact" },
+          ].map(({ label, href }) => (
             <Link
               key={label}
-              href={idx === 1 ? "/all-products" : "/"}
+              href={href}
               className="border-b-2 border-transparent hover:border-red-700 transition-all duration-300"
             >
               {label}
             </Link>
           ))}
+
           {isSeller && (
             <button
               onClick={() => router.push("/seller")}
