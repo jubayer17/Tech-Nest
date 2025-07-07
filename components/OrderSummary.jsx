@@ -83,7 +83,7 @@ const OrderSummary = () => {
       if (data.success) {
         toast.success(data.message);
         setCartItems({});
-        window.location.replace("/my-orders");
+        router.push(`/order-receipt/${data.orderId}`); // ✅ Redirect to OrderReciptDetail page
       } else {
         toast.error(data.message);
       }

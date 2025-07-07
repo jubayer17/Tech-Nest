@@ -7,6 +7,11 @@ import { usePathname } from "next/navigation";
 const SideBar = () => {
   const pathname = usePathname();
   const menuItems = [
+    {
+      name: "Sales Analytics",
+      path: "/seller/sales-analytics",
+      icon: assets.analytics_icon || assets.add_icon,
+    },
     { name: "Add Product", path: "/seller", icon: assets.add_icon },
     {
       name: "Product List",
@@ -20,11 +25,16 @@ const SideBar = () => {
     },
     { name: "Orders", path: "/seller/orders", icon: assets.order_icon },
 
-    // New section for Add Category
+    {
+      name: "Manage Orders",
+      path: "/seller/manage-orders",
+      icon: assets.manage_orders_icon || assets.order_icon,
+    },
+
     {
       name: "Add Category",
       path: "/seller/add-category",
-      icon: assets.category_icon || assets.add_icon, // replace with your category icon if you have one
+      icon: assets.category_icon || assets.add_icon,
     },
   ];
 

@@ -15,7 +15,7 @@ import logo2 from "../assets/logo.svg";
 import { useClerk, UserButton } from "@clerk/nextjs";
 import axios from "axios";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-
+import technest from "../assets/technest.svg"
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -141,7 +141,7 @@ const Navbar = ({
     >
       <div className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3">
         <Image
-          src={logo2}
+          src={technest}
           alt="logo"
           className="cursor-pointer w-28 md:w-32"
           onClick={() => router.push("/")}
