@@ -4,7 +4,7 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, openDrawer }) => {
   const { currency, router, addToCart } = useAppContext();
 
   const stock =
@@ -12,16 +12,15 @@ const ProductCard = ({ product }) => {
       ? product.stock
       : 0;
 
-  // Handle click on the image container
   const handleCardClick = () => {
     router.push(`/product/${product._id}`);
   };
 
-  // Handle button clicks with event blocking
   const handleAddToCartClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product._id);
+    openDrawer(); // Open the global drawer here
   };
 
   const handleBuyNowClick = (e) => {
@@ -44,7 +43,6 @@ const ProductCard = ({ product }) => {
           width={800}
           height={800}
         />
-        {/* Out of Stock Overlay */}
         {stock <= 0 && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
             <span className="bg-red-600/90 text-white text-sm font-bold uppercase px-3 py-1 rounded">
@@ -52,7 +50,6 @@ const ProductCard = ({ product }) => {
             </span>
           </div>
         )}
-
         <button
           type="button"
           className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md"

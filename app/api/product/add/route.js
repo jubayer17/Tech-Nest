@@ -1,9 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import { getAuth } from "@clerk/nextjs/server";
-import authSeller from "@/lib/authSeller";
 import { NextResponse } from "next/server";
 import connectdb from "@/config/db";
 import Product from "@/models/Product";
+import authSeller from "@/lib/authSeller"; // Keep only if it directly checks via Clerk SDK
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,9 +13,9 @@ cloudinary.config({
 
 export async function POST(req) {
   try {
-    const { userId } = await getAuth(req);
-    const isSeller = await authSeller(userId);
+    const { userId } = getAuth(req);
 
+    const isSeller = await authSeller(userId); // only if authSeller still works like this
     if (!isSeller) {
       return NextResponse.json(
         { success: false, message: "Not Authorized" },
@@ -72,14 +72,13 @@ export async function POST(req) {
       );
     }
 
-    if (!files || files.length === 0) {
+    if (!files || !Array.isArray(files) || files.length === 0) {
       return NextResponse.json(
         { success: false, message: "No files uploaded" },
         { status: 400 }
       );
     }
 
-    // ✅ Parse specs (from stringified JSON to object)
     let specs = {};
     try {
       specs = specsRaw ? JSON.parse(specsRaw) : {};
@@ -90,7 +89,6 @@ export async function POST(req) {
       );
     }
 
-    // ⬆️ Upload images to Cloudinary
     const result = await Promise.all(
       files.map(async (file) => {
         const arrayBuffer = await file.arrayBuffer();
@@ -113,9 +111,8 @@ export async function POST(req) {
 
     await connectdb();
 
-    // ✅ Include specs in product creation
     const newProduct = await Product.create({
-      userId,
+      userId: String(userId),
       name,
       description,
       category,

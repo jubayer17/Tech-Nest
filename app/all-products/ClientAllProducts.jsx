@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -7,8 +6,8 @@ import Footer from "@/components/Footer";
 import CategoryNavbar from "@/components/CategoryNavbar";
 import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
+import CartDrawer from "@/components/CartDrawer";
 import { useAppContext } from "@/context/AppContext";
-import Link from "next/link";
 
 const ClientAllProducts = () => {
   const { products } = useAppContext();
@@ -23,7 +22,8 @@ const ClientAllProducts = () => {
     search: "",
   });
 
-  // Read search and category from URL when page loads or URL changes
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   useEffect(() => {
     const categoryFromUrl = searchParams.get("category");
     const searchFromUrl = searchParams.get("search");
@@ -35,7 +35,6 @@ const ClientAllProducts = () => {
     }));
   }, [searchParams]);
 
-  // Filter products whenever products or filters change
   useEffect(() => {
     const filtered = products.filter((p) => {
       const rawPrice =
@@ -77,10 +76,13 @@ const ClientAllProducts = () => {
     }));
   }, []);
 
+  const openDrawer = () => setDrawerOpen(true);
+
   return (
     <>
       <Navbar />
       <CategoryNavbar />
+      <CartDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <div className="flex px-6 md:px-16 lg:px-32 gap-4">
         <aside className="hidden lg:block">
@@ -92,6 +94,7 @@ const ClientAllProducts = () => {
             selectedRating={filters.rating}
           />
         </aside>
+
         <main className="flex-1">
           <h2 className="text-2xl font-medium capitalize mb-4">
             {filters.category} Products
@@ -102,6 +105,7 @@ const ClientAllProducts = () => {
               </>
             )}
           </h2>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.length === 0 ? (
               <p className="col-span-full text-center text-gray-500 text-lg">
@@ -109,13 +113,11 @@ const ClientAllProducts = () => {
               </p>
             ) : (
               filteredProducts.map((product) => (
-                <Link
+                <ProductCard
                   key={product._id || product.id}
-                  href={`/product/${product._id || product.id}`}
-                  className="block"
-                >
-                  <ProductCard product={product} />
-                </Link>
+                  product={product}
+                  openDrawer={openDrawer}
+                />
               ))
             )}
           </div>

@@ -87,7 +87,6 @@ export const AppContextProvider = (props) => {
             { cartData: updated },
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          // no extra toast here
         } catch (err) {
           toast.error(err.message);
         }
@@ -116,9 +115,7 @@ export const AppContextProvider = (props) => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           if (quantity <= 0) toast.success("Item has been removed");
-          else {
-            toast.success("Cart updated sucessfully");
-          }
+          else toast.success("Cart updated successfully");
         } catch (err) {
           toast.error(err.message);
         }
@@ -127,11 +124,32 @@ export const AppContextProvider = (props) => {
     [cartItems, user, getToken]
   );
 
+  // Remove item shortcut
   const removeFromCart = useCallback(
     (itemId) => updateCartQuantity(itemId, 0),
     [updateCartQuantity]
   );
 
+  // Clear all cart items
+  const clearCart = useCallback(async () => {
+    setCartItems({}); // clear locally immediately
+
+    if (user) {
+      try {
+        const token = await getToken();
+        await axios.post(
+          "/api/cart/update",
+          { cartData: {} },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Cart emptied successfully");
+      } catch (err) {
+        toast.error(err.message);
+      }
+    }
+  }, [user, getToken]);
+
+  // Get total quantity in cart
   const getCartCount = useCallback(() => {
     return Object.values(cartItems).reduce(
       (total, qty) => total + (qty > 0 ? qty : 0),
@@ -139,6 +157,7 @@ export const AppContextProvider = (props) => {
     );
   }, [cartItems]);
 
+  // Get total price amount in cart
   const getCartAmount = useCallback(() => {
     let total = 0;
     if (!products?.length) return 0;
@@ -183,6 +202,7 @@ export const AppContextProvider = (props) => {
     addToCart,
     updateCartQuantity,
     removeFromCart,
+    clearCart, // exposed here
     getCartCount,
     getCartAmount,
   };
