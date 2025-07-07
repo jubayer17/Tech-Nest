@@ -2,11 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faArrowRight,
-  faTimes,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faArrowRight, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link";
 import { useAppContext } from "@/context/AppContext";
@@ -15,7 +11,8 @@ import logo2 from "../assets/logo.svg";
 import { useClerk, UserButton } from "@clerk/nextjs";
 import axios from "axios";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import technest from "../assets/technest.svg"
+import technest from "../assets/technest.svg";
+
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -25,42 +22,37 @@ function useDebounce(value, delay) {
   return debounced;
 }
 
-const Navbar = ({
-  className = "",
-  categories = [
-    "All",
-    "Laptop",
-    "Smartphone",
-    "Tablet",
-    "Earphone",
-    "Headphone",
-    "Watch",
-    "Software",
-    "Camera",
-    "Mouse",
-    "Keyboard",
-    "Monitor",
-    "Security",
-    "Processor",
-    "Accessories",
-  ],
-  onCategorySelect,
-  categoryClassName = "",
-}) => {
+const Navbar = ({ className = "", onCategorySelect, categoryClassName = "" }) => {
   const { isSeller, user, getCartCount } = useAppContext();
   const { openSignIn } = useClerk();
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const cartCount = getCartCount();
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams.get("search") || ""
-  );
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Fetch filtered product suggestions for dropdown
+  const cartCount = getCartCount();
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("/api/category/list");
+        if (res.data.success) {
+          const names = res.data.categories.map((cat) => cat.name);
+          setCategories(["All", ...names]);
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     if (!debouncedSearchTerm.trim()) {
       setFilteredProducts([]);
@@ -69,9 +61,7 @@ const Navbar = ({
 
     const fetchSearchResults = async () => {
       try {
-        const res = await axios.get(
-          `/api/product/get?search=${encodeURIComponent(debouncedSearchTerm)}`
-        );
+        const res = await axios.get(`/api/product/get?search=${encodeURIComponent(debouncedSearchTerm)}`);
         if (res.data.success) {
           setFilteredProducts(res.data.products);
         } else {
@@ -86,7 +76,6 @@ const Navbar = ({
     fetchSearchResults();
   }, [debouncedSearchTerm]);
 
-  // Sync search box when navigating via back/forward
   useEffect(() => {
     const newSearch = searchParams.get("search") || "";
     setSearchTerm(newSearch);
@@ -100,9 +89,7 @@ const Navbar = ({
 
   const handleSearchSubmit = () => {
     if (searchTerm.trim()) {
-      router.push(
-        `/all-products?search=${encodeURIComponent(searchTerm.trim())}`
-      );
+      router.push(`/all-products?search=${encodeURIComponent(searchTerm.trim())}`);
       setFilteredProducts([]);
     }
   };
@@ -111,11 +98,10 @@ const Navbar = ({
     setSearchTerm("");
     setFilteredProducts([]);
     if (pathname === "/all-products") {
-      router.push("/all-products"); // clears the ?search param
+      router.push("/all-products");
     }
   };
 
-  const [activeCategory, setActiveCategory] = useState(categories[0]);
   const containerRef = useRef(null);
 
   const scrollCategories = (direction) => {
@@ -136,9 +122,7 @@ const Navbar = ({
   };
 
   return (
-    <nav
-      className={`sticky top-0 z-30 bg-white border-b border-gray-300 text-gray-700 ${className}`}
-    >
+    <nav className={`sticky top-0 z-30 bg-white border-b border-gray-300 text-gray-700 ${className}`}>
       <div className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3">
         <Image
           src={technest}
@@ -147,7 +131,6 @@ const Navbar = ({
           onClick={() => router.push("/")}
         />
 
-        {/* Desktop navigation */}
         <div className="hidden md:flex items-center gap-4 lg:gap-8">
           {[
             { label: "Home", href: "/" },
@@ -174,7 +157,6 @@ const Navbar = ({
           )}
         </div>
 
-        {/* Search bar + Cart + Account */}
         <div className="hidden md:flex items-center gap-4 relative">
           <div className="relative w-72">
             <input
@@ -191,31 +173,23 @@ const Navbar = ({
               }}
             />
 
-            {/* ❌ clear icon */}
             {searchTerm && (
               <button
                 onClick={handleClearSearch}
                 className="absolute inset-y-0 right-8 flex items-center px-2 text-gray-500 hover:text-gray-700"
-                title="Clear search"
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
             )}
 
-            {/* 🔍 search icon */}
             <button
               onClick={handleSearchSubmit}
               aria-label="Search"
               className="absolute inset-y-0 right-0 flex items-center pr-3"
             >
-              <Image
-                src={assets.search_icon}
-                alt="search"
-                className="w-5 h-5"
-              />
+              <Image src={assets.search_icon} alt="search" className="w-5 h-5" />
             </button>
 
-            {/* Live dropdown suggestions */}
             {filteredProducts.length > 0 && (
               <div className="absolute z-50 top-12 left-0 right-0 bg-white border max-h-60 overflow-y-auto rounded shadow">
                 {filteredProducts.map((product) => (
@@ -231,7 +205,6 @@ const Navbar = ({
             )}
           </div>
 
-          {/* Cart Icon */}
           <div
             className="relative cursor-pointer"
             onClick={() => router.push("/cart")}
@@ -244,34 +217,21 @@ const Navbar = ({
             )}
           </div>
 
-          {/* Account */}
           {user ? (
             <UserButton>
               <UserButton.MenuItems>
-                <UserButton.Action
-                  label="Cart"
-                  labelIcon={<CartIcon />}
-                  onClick={() => router.push("/cart")}
-                />
-                <UserButton.Action
-                  label="My Orders"
-                  labelIcon={<BagIcon />}
-                  onClick={() => router.push("/my-orders")}
-                />
+                <UserButton.Action label="Cart" labelIcon={<CartIcon />} onClick={() => router.push("/cart")} />
+                <UserButton.Action label="My Orders" labelIcon={<BagIcon />} onClick={() => router.push("/my-orders")} />
               </UserButton.MenuItems>
             </UserButton>
           ) : (
-            <button
-              onClick={openSignIn}
-              className="flex items-center gap-2 hover:text-gray-900 transition"
-            >
+            <button onClick={openSignIn} className="flex items-center gap-2 hover:text-gray-900 transition">
               <Image src={assets.user_icon} alt="user icon" />
               Account
             </button>
           )}
         </div>
 
-        {/* Mobile nav */}
         <div className="flex items-center md:hidden gap-3">
           {isSeller && (
             <button
@@ -284,33 +244,14 @@ const Navbar = ({
           {user ? (
             <UserButton>
               <UserButton.MenuItems>
-                <UserButton.Action
-                  label="Home"
-                  labelIcon={<HomeIcon />}
-                  onClick={() => router.push("/")}
-                />
-                <UserButton.Action
-                  label="Products"
-                  labelIcon={<BoxIcon />}
-                  onClick={() => router.push("/all-products")}
-                />
-                <UserButton.Action
-                  label="Cart"
-                  labelIcon={<CartIcon />}
-                  onClick={() => router.push("/cart")}
-                />
-                <UserButton.Action
-                  label="My Orders"
-                  labelIcon={<BagIcon />}
-                  onClick={() => router.push("/my-orders")}
-                />
+                <UserButton.Action label="Home" labelIcon={<HomeIcon />} onClick={() => router.push("/")} />
+                <UserButton.Action label="Products" labelIcon={<BoxIcon />} onClick={() => router.push("/all-products")} />
+                <UserButton.Action label="Cart" labelIcon={<CartIcon />} onClick={() => router.push("/cart")} />
+                <UserButton.Action label="My Orders" labelIcon={<BagIcon />} onClick={() => router.push("/my-orders")} />
               </UserButton.MenuItems>
             </UserButton>
           ) : (
-            <button
-              onClick={openSignIn}
-              className="flex items-center gap-2 hover:text-gray-900 transition"
-            >
+            <button onClick={openSignIn} className="flex items-center gap-2 hover:text-gray-900 transition">
               <Image src={assets.user_icon} alt="user icon" />
               Account
             </button>
@@ -318,10 +259,7 @@ const Navbar = ({
         </div>
       </div>
 
-      {/* Category Navbar */}
-      <div
-        className={`w-full bg-gray-100 border-t border-gray-300 shadow-sm ${categoryClassName}`}
-      >
+      <div className={`w-full bg-gray-100 border-t border-gray-300 shadow-sm ${categoryClassName}`}>
         <div className="relative max-w-7xl mx-auto px-6">
           <button
             onClick={() => scrollCategories("left")}
@@ -336,21 +274,16 @@ const Navbar = ({
           >
             {categories.map((cat) => {
               const isActive = activeCategory === cat;
-              const baseCls =
-                "text-sm font-medium px-4 py-1 rounded-2xl transition duration-300 ease-in-out";
-              const activeCls =
-                "text-orange-600 bg-white shadow-md relative after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-10 after:h-1 after:bg-orange-600";
-              const inactiveCls =
-                "text-gray-700 hover:text-orange-600 hover:bg-gray-200";
+              const baseCls = "text-sm font-medium px-4 py-1 rounded-2xl transition duration-300 ease-in-out";
+              const activeCls = "text-orange-600 bg-white shadow-md relative after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-10 after:h-1 after:bg-orange-600";
+              const inactiveCls = "text-gray-700 hover:text-orange-600 hover:bg-gray-200";
 
               return (
                 <li key={cat} className="list-none">
                   <button
                     type="button"
                     onClick={() => handleCategoryClick(cat)}
-                    className={`${baseCls} ${
-                      isActive ? activeCls : inactiveCls
-                    }`}
+                    className={`${baseCls} ${isActive ? activeCls : inactiveCls}`}
                   >
                     {cat}
                   </button>

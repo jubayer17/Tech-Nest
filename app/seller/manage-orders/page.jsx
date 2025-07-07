@@ -67,7 +67,7 @@ const ManageOrders = () => {
             </thead>
             <tbody>
               {orders.slice().reverse().map((order) => (
-                <tr key={order._id} className="text-center border">
+                 <tr key={order._id} className="text-center border">
                   <td className="p-2 border">{order._id.slice(-6)}</td>
                   <td className="p-2 border">{order.user?.name || "N/A"}</td>
                   <td className="p-2 border">${order.amount}</td>
