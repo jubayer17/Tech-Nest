@@ -8,6 +8,7 @@ import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import CartDrawer from "@/components/CartDrawer";
 import { useAppContext } from "@/context/AppContext";
+import CartButton from "@/components/CartButton";
 
 const ClientAllProducts = () => {
   const { products } = useAppContext();
@@ -113,11 +114,8 @@ const ClientAllProducts = () => {
               </p>
             ) : (
               filteredProducts.map((product) => (
-                <ProductCard
-                  key={product._id || product.id}
-                  product={product}
-                  openDrawer={openDrawer}
-                />
+                <ProductCard key={product._id || product.id} product={product} />
+
               ))
             )}
           </div>
@@ -125,6 +123,9 @@ const ClientAllProducts = () => {
       </div>
 
       <Footer />
+      <CartButton openDrawer={openDrawer} />
+
+    
     </>
   );
 };

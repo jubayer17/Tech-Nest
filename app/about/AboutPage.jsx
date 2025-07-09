@@ -9,7 +9,7 @@ export default function AboutPage() {
       <Navbar />
       <main className="max-w-5xl mx-auto p-6 text-gray-800">
         <h1 className="text-4xl font-bold mb-8 text-center text-indigo-700">
-          About <span className="text-orange-500">Quick Cart</span>
+          About <span className="text-orange-500">TECH NEST</span>
         </h1>
 
         <section className="mb-10">

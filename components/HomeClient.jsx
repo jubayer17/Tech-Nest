@@ -8,6 +8,7 @@ import FeaturedProduct from "@/components/FeaturedProduct";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
+import CartButton from "@/components/CartButton"; // ← import it
 
 const HomeClient = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -23,7 +24,7 @@ const HomeClient = () => {
       <div className="px-6 md:px-16 lg:px-32">
         <HeaderSlider />
 
-        {/* Pass openDrawer to components so ProductCards can open drawer */}
+        {/* Pass openDrawer to children so they can add-to-cart without opening */}
         <HomeProducts openDrawer={openDrawer} />
         <FeaturedProduct openDrawer={openDrawer} />
 
@@ -32,6 +33,8 @@ const HomeClient = () => {
       </div>
 
       <Footer />
+      {/* Floating Cart Button */}
+      <CartButton openDrawer={openDrawer} />
     </>
   );
 };

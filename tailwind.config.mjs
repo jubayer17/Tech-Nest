@@ -7,12 +7,20 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+      keyframes: {
+        "alarm-vibrate": {
+          "0%, 100%": { transform: "translate(0, 0)" },
+          "12.5%": { transform: "translate(-2px, -2px)" },
+          "25%": { transform: "translate(2px, 2px)" },
+          "37.5%": { transform: "translate(-2px, 2px)" },
+          "50%": { transform: "translate(2px, -2px)" },
+          "62.5%": { transform: "translate(-2px, -2px)" },
+          "75%": { transform: "translate(2px, 2px)" },
+          "87.5%": { transform: "translate(-2px, 2px)" },
+        },
       },
-      gridTemplateColumns:{
-        'auto': 'repeat(auto-fit, minmax(200px, 1fr))'
+      animation: {
+        "alarm-vibrate": "alarm-vibrate 0.5s linear",
       },
     },
   },

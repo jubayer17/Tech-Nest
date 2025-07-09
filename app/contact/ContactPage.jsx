@@ -21,7 +21,7 @@ export default function ContactPage() {
       <Navbar />
       <main className="max-w-2xl mx-auto p-6 text-gray-800">
         <h1 className="text-4xl font-bold mb-6 text-center text-indigo-700">
-          Contact <span className="text-orange-500">Quick Cart</span>
+          Contact <span className="text-orange-500">With Us</span>
         </h1>
 
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">

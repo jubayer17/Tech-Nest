@@ -4,7 +4,7 @@ import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 
-const ProductCard = ({ product, openDrawer }) => {
+const ProductCard = ({ product }) => {
   const { currency, router, addToCart } = useAppContext();
 
   const stock =
@@ -19,8 +19,7 @@ const ProductCard = ({ product, openDrawer }) => {
   const handleAddToCartClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product._id);
-    openDrawer(); // Open the global drawer here
+    addToCart(product._id); // ✅ Only add to cart, no drawer
   };
 
   const handleBuyNowClick = (e) => {
