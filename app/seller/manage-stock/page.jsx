@@ -12,8 +12,16 @@ const SellerProductStockManager = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stockInputs, setStockInputs] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [inputPage, setInputPage] = useState("");
 
-  // 1) Load seller's products
+  const productsPerPage = 15;
+  const totalPages = Math.ceil(products.length / productsPerPage);
+
+  const indexOfLast = currentPage * productsPerPage;
+  const indexOfFirst = indexOfLast - productsPerPage;
+  const currentProducts = products.slice(indexOfFirst, indexOfLast);
+
   const fetchSellerProduct = async () => {
     try {
       const token = await getToken();
@@ -32,7 +40,6 @@ const SellerProductStockManager = () => {
     }
   };
 
-  // 2) Update actual stock
   const updateStock = async (id, value) => {
     if (!id) return;
     const newStock = parseInt(value, 10);
@@ -47,7 +54,6 @@ const SellerProductStockManager = () => {
       );
       if (data.success) {
         toast.success("Stock updated");
-        // refresh entire list
         fetchSellerProduct();
       } else {
         toast.error(data.message);
@@ -57,7 +63,6 @@ const SellerProductStockManager = () => {
     }
   };
 
-  // 3) Delete product
   const deleteProduct = async (id) => {
     if (!id) return;
     try {
@@ -76,7 +81,6 @@ const SellerProductStockManager = () => {
     }
   };
 
-  // 4) Toggle hide/show stock
   const toggleStockVisibility = async (productId) => {
     if (!productId) {
       toast.error("Invalid product ID");
@@ -91,7 +95,6 @@ const SellerProductStockManager = () => {
       );
       if (data.success) {
         toast.success(data.message);
-        // merge returned product into state
         setProducts((prev) =>
           prev.map((p) => (p._id === data.product._id ? data.product : p))
         );
@@ -103,7 +106,16 @@ const SellerProductStockManager = () => {
     }
   };
 
-  // load on mount
+  const handlePageSubmit = () => {
+    const page = parseInt(inputPage);
+    if (!isNaN(page) && page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setInputPage("");
+    } else {
+      toast.error(`Enter valid page number between 1 and ${totalPages}`);
+    }
+  };
+
   useEffect(() => {
     if (user) fetchSellerProduct();
   }, [user]);
@@ -127,7 +139,7 @@ const SellerProductStockManager = () => {
               </tr>
             </thead>
             <tbody className="text-sm text-gray-500">
-              {products.map((product) =>
+              {currentProducts.map((product) =>
                 !product?._id ? null : (
                   <tr key={product._id} className="border-t border-gray-500/20">
                     <td className="px-4 py-3 flex items-center space-x-3 truncate">
@@ -141,9 +153,7 @@ const SellerProductStockManager = () => {
                       </div>
                       <span className="truncate w-full">{product.name}</span>
                     </td>
-                    <td className="px-4 py-3 max-sm:hidden">
-                      {product.category}
-                    </td>
+                    <td className="px-4 py-3 max-sm:hidden">{product.category}</td>
                     <td className="px-4 py-3">${product.offerPrice}</td>
                     <td className="px-4 py-3" colSpan={2}>
                       <div className="flex flex-col gap-1 min-w-[280px]">
@@ -193,9 +203,7 @@ const SellerProductStockManager = () => {
                             }`}
                             onClick={() => toggleStockVisibility(product._id)}
                           >
-                            {product.forceOutOfStock
-                              ? "Show Stock"
-                              : "Hide Stock"}
+                            {product.forceOutOfStock ? "Show Stock" : "Hide Stock"}
                           </button>
                         </div>
                       </div>
@@ -205,6 +213,82 @@ const SellerProductStockManager = () => {
               )}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex flex-col items-center mt-6 gap-2">
+              <div className="flex flex-wrap justify-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  className={`px-3 py-1.5 rounded border text-sm ${
+                    currentPage === 1
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border-gray-400"
+                  }`}
+                >
+                  Prev
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => {
+                  const page = i + 1;
+                  if (totalPages <= 4 || page <= 3 || page === totalPages) {
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1.5 rounded border text-sm ${
+                          currentPage === page
+                            ? "bg-orange-600 text-white border-orange-600"
+                            : "bg-white text-gray-700 border-gray-400"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+                  if (page === 4) {
+                    return (
+                      <span key="dots" className="px-3 py-1.5 text-gray-500">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className={`px-3 py-1.5 rounded border text-sm ${
+                    currentPage === totalPages
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border-gray-400"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  placeholder={`1 - ${totalPages}`}
+                  value={inputPage}
+                  onChange={(e) => setInputPage(e.target.value)}
+                  className="px-3 py-1 border rounded w-24 text-sm"
+                />
+                <button
+                  onClick={handlePageSubmit}
+                  className="px-3 py-1.5 bg-orange-600 text-white rounded text-sm"
+                >
+                  Go
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <Footer />

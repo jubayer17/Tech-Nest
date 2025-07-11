@@ -5,12 +5,22 @@ import { useAppContext } from "@/context/AppContext";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import Loading from "@/components/Loading";
+import Footer from "@/components/seller/Footer";
 
 const TopSellingProductsPage = () => {
   const { getToken, user } = useAppContext();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stockInputs, setStockInputs] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [inputPage, setInputPage] = useState("");
+
+  const productsPerPage = 15;
+  const totalPages = Math.ceil(products.length / productsPerPage);
+
+  const indexOfLast = currentPage * productsPerPage;
+  const indexOfFirst = indexOfLast - productsPerPage;
+  const currentProducts = products.slice(indexOfFirst, indexOfLast);
 
   const fetchTopProducts = async () => {
     try {
@@ -18,7 +28,7 @@ const TopSellingProductsPage = () => {
       const { data } = await axios.get("/api/seller/overview", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (data.topProducts && Array.isArray(data.topProducts)) {
+      if (Array.isArray(data.topProducts)) {
         setProducts(data.topProducts);
       } else {
         toast.error("No top products found.");
@@ -31,13 +41,11 @@ const TopSellingProductsPage = () => {
   };
 
   const updateStock = async (id, value) => {
-    if (!id) return;
     const newStock = parseInt(value, 10);
     if (isNaN(newStock) || newStock < 0) {
       toast.error("Please enter a valid stock number.");
       return;
     }
-
     try {
       const token = await getToken();
       const { data } = await axios.post(
@@ -74,6 +82,16 @@ const TopSellingProductsPage = () => {
     }
   };
 
+  const handlePageSubmit = () => {
+    const page = parseInt(inputPage);
+    if (!isNaN(page) && page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setInputPage("");
+    } else {
+      toast.error(`Enter valid page number between 1 and ${totalPages}`);
+    }
+  };
+
   useEffect(() => {
     if (user) fetchTopProducts();
   }, [user]);
@@ -83,7 +101,8 @@ const TopSellingProductsPage = () => {
   return (
     <div className="w-full md:p-10 p-4">
       <h2 className="pb-4 text-lg font-semibold text-indigo-600">Top Selling Products</h2>
-      {products.length === 0 ? (
+
+      {currentProducts.length === 0 ? (
         <p className="text-gray-600">No top selling products available.</p>
       ) : (
         <div className="flex flex-col items-center max-w-5xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
@@ -100,7 +119,7 @@ const TopSellingProductsPage = () => {
               </tr>
             </thead>
             <tbody className="text-sm text-gray-500">
-              {products.map(({ product, totalSold }) =>
+              {currentProducts.map(({ product, totalSold }) =>
                 product?._id ? (
                   <tr key={product._id} className="border-t border-gray-500/20">
                     <td className="px-4 py-3 flex items-center space-x-3 truncate">
@@ -155,6 +174,102 @@ const TopSellingProductsPage = () => {
           </table>
         </div>
       )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col items-center mt-6 gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className={`px-3 py-1.5 rounded border text-sm ${
+                currentPage === 1
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-700 border-gray-400"
+              }`}
+            >
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => {
+              const page = i + 1;
+              if (totalPages <= 4) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1.5 rounded border text-sm ${
+                      currentPage === page
+                        ? "bg-orange-600 text-white border-orange-600"
+                        : "bg-white text-gray-700 border-gray-400"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              }
+
+              if (page <= 3 || page === totalPages) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1.5 rounded border text-sm ${
+                      currentPage === page
+                        ? "bg-orange-600 text-white border-orange-600"
+                        : "bg-white text-gray-700 border-gray-400"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              }
+
+              if (page === 4) {
+                return (
+                  <span key="dots" className="px-3 py-1.5 text-gray-500">
+                    ...
+                  </span>
+                );
+              }
+
+              return null;
+            })}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className={`px-3 py-1.5 rounded border text-sm ${
+                currentPage === totalPages
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-700 border-gray-400"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              placeholder={`1 - ${totalPages}`}
+              value={inputPage}
+              onChange={(e) => setInputPage(e.target.value)}
+              className="px-3 py-1 border rounded w-24 text-sm"
+            />
+            <button
+              onClick={handlePageSubmit}
+              className="px-3 py-1.5 bg-orange-600 text-white rounded text-sm"
+            >
+              Go
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Footer />
     </div>
   );
 };

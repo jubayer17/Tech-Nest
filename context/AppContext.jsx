@@ -1,4 +1,5 @@
 "use client";
+
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
@@ -12,7 +13,6 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 export const AppContext = createContext();
-
 export const useAppContext = () => useContext(AppContext);
 
 export const AppContextProvider = (props) => {
@@ -21,7 +21,6 @@ export const AppContextProvider = (props) => {
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState([]);
   const [userData, setUserData] = useState(null);
   const [isSeller, setIsSeller] = useState(false);
@@ -34,11 +33,8 @@ export const AppContextProvider = (props) => {
     setLoadingProducts(true);
     try {
       const { data } = await axios.get("/api/product/list");
-      if (data.success) {
-        setProducts(data.products);
-      } else {
-        toast.error(data.message);
-      }
+      if (data.success) setProducts(data.products);
+      else toast.error(data.message);
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -52,12 +48,10 @@ export const AppContextProvider = (props) => {
     setLoadingUser(true);
     try {
       setIsSeller(user.publicMetadata?.role === "seller");
-
       const token = await getToken();
       const { data } = await axios.get("/api/user/data", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (data.success) {
         setUserData(data.user);
         setCartItems(data.user.cartItems || {});
@@ -71,13 +65,13 @@ export const AppContextProvider = (props) => {
     }
   }, [user, getToken]);
 
-  // Add item to cart
+  // Add item to cart with quantity
   const addToCart = useCallback(
-    async (itemId) => {
+    async (itemId, qty = 1) => {
       const updated = { ...cartItems };
-      updated[itemId] = (updated[itemId] || 0) + 1;
+      updated[itemId] = (updated[itemId] || 0) + qty;
       setCartItems(updated);
-      toast.success("Added to cart");
+      toast.success("Cart updated");
 
       if (user) {
         try {
@@ -99,11 +93,8 @@ export const AppContextProvider = (props) => {
   const updateCartQuantity = useCallback(
     async (itemId, quantity) => {
       const updated = { ...cartItems };
-      if (quantity <= 0) {
-        delete updated[itemId];
-      } else {
-        updated[itemId] = quantity;
-      }
+      if (quantity <= 0) delete updated[itemId];
+      else updated[itemId] = quantity;
       setCartItems(updated);
 
       if (user) {
@@ -114,8 +105,7 @@ export const AppContextProvider = (props) => {
             { cartData: updated },
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          if (quantity <= 0) toast.success("Item has been removed");
-          else toast.success("Cart updated successfully");
+          toast.success(quantity <= 0 ? "Item removed" : "Cart updated");
         } catch (err) {
           toast.error(err.message);
         }
@@ -124,16 +114,13 @@ export const AppContextProvider = (props) => {
     [cartItems, user, getToken]
   );
 
-  // Remove item shortcut
   const removeFromCart = useCallback(
     (itemId) => updateCartQuantity(itemId, 0),
     [updateCartQuantity]
   );
 
-  // Clear all cart items
   const clearCart = useCallback(async () => {
-    setCartItems({}); // clear locally immediately
-
+    setCartItems({});
     if (user) {
       try {
         const token = await getToken();
@@ -142,31 +129,23 @@ export const AppContextProvider = (props) => {
           { cartData: {} },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("Cart emptied successfully");
+        toast.success("Cart cleared");
       } catch (err) {
         toast.error(err.message);
       }
     }
   }, [user, getToken]);
 
-  // Get total quantity in cart
-  const getCartCount = useCallback(() => {
-    return Object.values(cartItems).reduce(
-      (total, qty) => total + (qty > 0 ? qty : 0),
-      0
-    );
-  }, [cartItems]);
+  const getCartCount = useCallback(
+    () => Object.values(cartItems).reduce((a, b) => a + Math.max(b, 0), 0),
+    [cartItems]
+  );
 
-  // Get total price amount in cart
   const getCartAmount = useCallback(() => {
     let total = 0;
-    if (!products?.length) return 0;
-
     for (const id in cartItems) {
       const item = products.find((p) => p._id === id);
-      if (item && cartItems[id] > 0) {
-        total += item.offerPrice * cartItems[id];
-      }
+      if (item && cartItems[id] > 0) total += item.offerPrice * cartItems[id];
     }
     return Number(total.toFixed(2));
   }, [cartItems, products]);
@@ -176,9 +155,8 @@ export const AppContextProvider = (props) => {
   }, [fetchProductData]);
 
   useEffect(() => {
-    if (user) {
-      fetchUserData();
-    } else {
+    if (user) fetchUserData();
+    else {
       setUserData(null);
       setCartItems({});
       setIsSeller(false);
@@ -198,16 +176,17 @@ export const AppContextProvider = (props) => {
     loadingProducts,
     loadingUser,
     cartItems,
-    setCartItems,
     addToCart,
     updateCartQuantity,
     removeFromCart,
-    clearCart, // exposed here
+    clearCart,
     getCartCount,
     getCartAmount,
   };
 
   return (
-    <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
+    <AppContext.Provider value={value}>
+      {props.children}
+    </AppContext.Provider>
   );
 };

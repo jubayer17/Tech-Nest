@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Footer from "@/components/seller/Footer";
 
 const colors = [
   "bg-green-600",
@@ -79,7 +80,10 @@ const Page = () => {
           </div>
         )}
       </section>
+      <Footer />
+      
     </div>
+
   );
 };
 

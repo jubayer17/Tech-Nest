@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import Footer from "@/components/seller/Footer";
 
 const AddCategory = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -177,7 +178,10 @@ const AddCategory = () => {
             </button>
           </form>
         </section>
+        
       </div>
+      <Footer/>
+
     </div>
   );
 };

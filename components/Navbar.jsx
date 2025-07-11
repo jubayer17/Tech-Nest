@@ -11,7 +11,7 @@ import logo2 from "../assets/logo.svg";
 import { useClerk, UserButton } from "@clerk/nextjs";
 import axios from "axios";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import technest from "../assets/technest.svg";
+import technest from "../assets/technest.png";
 
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);

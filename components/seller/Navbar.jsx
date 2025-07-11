@@ -2,7 +2,7 @@ import React from 'react'
 import { useAppContext } from '@/context/AppContext'
 import Image from 'next/image'
 import logo2 from "@/assets/logo2.png";
-import technest from "@/assets/technest.svg"
+import technest from "@/assets/technest.png"
 
 
 const Navbar = () => {

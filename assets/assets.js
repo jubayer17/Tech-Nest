@@ -51,7 +51,7 @@ import iphn from "./iphn.png";
 import aula from "./aulaaaaaaaaaaa.png";
 import stripe_logo from "./stripe_logo.svg";
 import linkedin_svg from "./linkedmain.svg";
-import technest from "./technest.svg";
+import technest from "./technest.png";
 export const assets = {
   technest,
   linkedin_svg,

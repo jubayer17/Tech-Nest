@@ -14,6 +14,7 @@ import {
   Legend,
 } from "chart.js";
 import { Download, RefreshCw } from "lucide-react";
+import Footer from "@/components/seller/Footer";
 
 ChartJS.register(
   CategoryScale,
@@ -192,6 +193,7 @@ export default function SalesAnalytics() {
           <p className="text-center text-gray-500">No chart data</p>
         )}
       </div>
+      <Footer />
     </div>
   );
 }
