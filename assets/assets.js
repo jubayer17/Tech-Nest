@@ -34,8 +34,10 @@ import sony_airbuds_image from "./sony_airbuds_image.png";
 import asus_laptop_image from "./asus_laptop_image.png";
 import projector_image from "./projector_image.png";
 import playstation_image from "./playstation_image.png";
-import girl_with_headphone_image from "./girl_with_headphone_image.png";
+import girl_with_headphone_image from "./girl_with_headphone_image.jpg";
+import boy_with_camera_image from "./boy_with_camera_image.jpg";
 import girl_with_earphone_image from "./girl_with_earphone_image.png";
+import girl_with_laptop from "./girl_with_laptop.jpg";
 import md_controller_image from "./md_controller_image.png";
 import sm_controller_image from "./sm_controller_image.png";
 import jbl_soundbox_image from "./jbl_soundbox_image.png";
@@ -53,6 +55,8 @@ import stripe_logo from "./stripe_logo.svg";
 import linkedin_svg from "./linkedmain.svg";
 import technest from "./technest.png";
 export const assets = {
+  girl_with_laptop,
+  boy_with_camera_image,
   technest,
   linkedin_svg,
   stripe_logo,

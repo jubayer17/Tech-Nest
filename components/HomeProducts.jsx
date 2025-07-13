@@ -1,9 +1,11 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import ProductCard from "./ProductCard";
 import { useAppContext } from "@/context/AppContext";
 
-const HomeProducts = ({ openDrawer }) => {
-  const { products, router } = useAppContext();
+const HomeProducts = () => {
+  const { products = [], router } = useAppContext();
   const [columns, setColumns] = useState(2);
 
   useEffect(() => {
@@ -11,7 +13,7 @@ const HomeProducts = ({ openDrawer }) => {
       const w = window.innerWidth;
       if (w >= 1280) return setColumns(5);
       if (w >= 1024) return setColumns(4);
-      if (w >= 768)  return setColumns(3);
+      if (w >= 768) return setColumns(3);
       return setColumns(2);
     };
 
@@ -22,23 +24,16 @@ const HomeProducts = ({ openDrawer }) => {
 
   const maxItems = columns * 3;
 
+  if (!products.length) return <p>Loading products...</p>;
+
   return (
     <div className="flex flex-col items-center pt-14">
-      <p className="text-2xl font-medium text-left w-full">
-        Popular Products
-      </p>
+      <p className="text-2xl font-medium text-left w-full">Popular Products</p>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
-        {products
-          .slice(0, maxItems)
-          .map((product) => (
-            <ProductCard
-              key={product._id || product.id}
-              product={product}
-              openDrawer={openDrawer}
-            />
-          ))
-        }
+        {products.slice(0, maxItems).map((product) => (
+          <ProductCard key={product._id} product={product} />
+        ))}
       </div>
 
       <button

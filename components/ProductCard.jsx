@@ -1,6 +1,7 @@
 "use client";
-import React from "react";
-import { assets } from "@/assets/assets";
+
+import React, { useEffect, useState } from "react";
+import { MdStar, MdStarHalf, MdStarBorder } from "react-icons/md";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 
@@ -12,6 +13,36 @@ const ProductCard = ({ product }) => {
       ? product.stock
       : 0;
 
+  // We'll keep avgRating as state, fetch reviews and calculate avgRating dynamically
+  const [avgRating, setAvgRating] = useState(product.avgRating || 0);
+
+  // Fetch and compute avgRating for this product on mount or when product changes
+  useEffect(() => {
+    const fetchReviews = async (productId) => {
+      try {
+        const res = await fetch(`/api/reviews/${productId}`);
+        if (!res.ok) throw new Error("Failed to fetch reviews");
+        const data = await res.json();
+        // Sort descending by date or createdAt
+        const sorted = data.sort(
+          (a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt)
+        );
+        // Calculate average rating rounded to nearest 0.5
+        const sum = sorted.reduce((acc, r) => acc + r.stars, 0);
+        const avg = sorted.length ? Math.round((sum / sorted.length) * 2) / 2 : 0;
+        setAvgRating(avg);
+      } catch (err) {
+        console.error("Failed to fetch reviews:", err);
+        // fallback to product.avgRating if fetch fails
+        setAvgRating(product.avgRating || 0);
+      }
+    };
+
+    if (product?._id) {
+      fetchReviews(product._id);
+    }
+  }, [product]);
+
   const handleCardClick = () => {
     router.push(`/product/${product._id}`);
   };
@@ -19,7 +50,7 @@ const ProductCard = ({ product }) => {
   const handleAddToCartClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product._id); // ✅ Only add to cart, no drawer
+    addToCart(product._id);
   };
 
   const handleBuyNowClick = (e) => {
@@ -57,7 +88,15 @@ const ProductCard = ({ product }) => {
             e.stopPropagation();
           }}
         >
-          <Image className="h-3 w-3" src={assets.heart_icon} alt="heart_icon" />
+          <svg
+            className="h-3 w-3 text-red-500"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3
+             7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 
+             22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
         </button>
       </div>
 
@@ -70,18 +109,22 @@ const ProductCard = ({ product }) => {
       </p>
 
       <div className="flex items-center gap-2 mt-1">
-        <p className="text-xs">{4.5}</p>
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Image
-              key={index}
-              className="h-3 w-3"
-              src={
-                index < Math.floor(4) ? assets.star_icon : assets.star_dull_icon
-              }
-              alt="star_icon"
-            />
-          ))}
+        <p className="text-xs">{avgRating.toFixed(1)}</p>
+        <div className="flex items-center gap-0.5 text-orange-500">
+          {Array.from({ length: 5 }).map((_, index) => {
+            const full = index + 1 <= Math.floor(avgRating);
+            const half =
+              !full &&
+              avgRating >= index + 0.5 &&
+              avgRating < index + 1;
+            return full ? (
+              <MdStar key={index} className="w-4 h-4" />
+            ) : half ? (
+              <MdStarHalf key={index} className="w-4 h-4" />
+            ) : (
+              <MdStarBorder key={index} className="w-4 h-4" />
+            );
+          })}
         </div>
       </div>
 

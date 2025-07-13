@@ -5,15 +5,49 @@ import Navbar from "@/components/Navbar";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("✅ Thanks for contacting Quick Cart!");
-    setForm({ name: "", email: "", message: "" });
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/send-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: "ahmedjubayer52@gmail.com",
+          subject: `📩 Contact Message from ${form.name}`,
+          html: `
+            <div>
+              <h2>New Contact Submission</h2>
+              <p><strong>Name:</strong> ${form.name}</p>
+              <p><strong>Email:</strong> ${form.email}</p>
+              <p><strong>Message:</strong></p>
+              <p>${form.message}</p>
+            </div>
+          `,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("✅ Message sent successfully!");
+        setForm({ name: "", email: "", message: "" });
+      } else {
+        alert("❌ Failed to send message. Try again later.");
+      }
+    } catch (error) {
+      alert("❌ Server error occurred.");
+      console.error("Send mail error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,9 +106,14 @@ export default function ContactPage() {
 
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-6 rounded-md font-semibold transition"
+              disabled={loading}
+              className={`w-full text-white py-2 px-6 rounded-md font-semibold transition ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700"
+              }`}
             >
-              Send Message
+              {loading ? "Sending..." : "Send Message"}
             </button>
           </form>
         </div>

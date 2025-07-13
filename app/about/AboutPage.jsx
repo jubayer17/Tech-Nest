@@ -14,7 +14,7 @@ export default function AboutPage() {
 
         <section className="mb-10">
           <p className="text-lg mb-4 text-justify">
-            <strong>Quick Cart</strong> is your modern solution for
+            <strong>Tech Nest</strong> is your modern solution for
             e-commerce—bringing you the latest electronics, tech gadgets, and
             accessories at unbeatable prices. Our goal is simple: make online
             shopping fast, smooth, and fun.
@@ -22,9 +22,24 @@ export default function AboutPage() {
           <p className="text-lg text-justify">
             We believe in a frictionless customer journey—from discovering
             quality products to a quick, secure checkout and on-time delivery.
-            With trusted brands and 24/7 support, Quick Cart is built to exceed
+            With trusted brands and 24/7 support, Tech Nest is built to exceed
             your expectations.
           </p>
+        </section>
+
+        <section className="bg-gray-50 p-6 rounded-lg shadow-inner mb-12">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4 text-center">
+            Meet the Founder
+          </h2>
+          <div className="text-center">
+            <p className="text-xl font-bold text-indigo-700">Jubayer Ahmed</p>
+            <p className="text-sm text-gray-700 mt-1">Founder & Full Stack Engineer</p>
+            <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
+              With a deep passion for modern web technologies and user-focused design,
+              Jubayer founded <strong>Tech Nest</strong> to redefine online shopping — blending speed,
+              reliability, and elegant UI into a seamless customer experience.
+            </p>
+          </div>
         </section>
 
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -53,24 +68,6 @@ export default function AboutPage() {
               always included.
             </p>
           </div>
-        </section>
-
-        <section className="bg-gray-50 p-6 rounded-lg shadow-inner">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            Meet the Founders
-          </h2>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
-            <li>
-              <strong>Md. Jubayer</strong> — Technical Lead & Co-Founder
-            </li>
-            <li>
-              <strong>Md. Zahid Hossain</strong> — UI/UX and Product Strategist
-            </li>
-          </ul>
-          <p className="mt-4 text-gray-600">
-            Together, they founded <strong>Quick Cart</strong> to deliver speed,
-            elegance, and satisfaction in a single shopping experience.
-          </p>
         </section>
       </main>
     </>

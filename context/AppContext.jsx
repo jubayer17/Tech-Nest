@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -176,6 +176,7 @@ export const AppContextProvider = (props) => {
     loadingProducts,
     loadingUser,
     cartItems,
+    setCartItems,        // 🔹 Exposed setter to prevent "setCartItems is not a function" errors
     addToCart,
     updateCartQuantity,
     removeFromCart,
